@@ -17,11 +17,10 @@
 //#include <I2CBus.cpp>
 
 /* Constants */
-#define PI                                3.14159265F
 #define GYRO_SENSITIVITY_2000DPS          0.070F
 #define SENSORS_GRAVITY_EARTH             9.80665F              /**< Earth's gravity in m/s^2 */
 #define SENSORS_GRAVITY_STANDARD          (SENSORS_GRAVITY_EARTH / 0x4000)
-#define SENSORS_DPS_TO_RADS               (PI / 180.)             /**< Degrees/s to rad/s multiplier */
+#define SENSORS_DPS_TO_RADS               (M_PI / 180.)         /**< Degrees/s to rad/s multiplier */
 #define SENSORS_MILIGAUSS_TO_TESLA        10000000
 
 
@@ -63,9 +62,9 @@ void mpu9250_imu_read(struct mpu9250 *imu_d)
       pitch = (float)atan(-acc_x / den);
     } else {
       if (acc_x > 0) {
-        pitch = PI / 2;
+        pitch = M_PI / 2;
       } else {
-        pitch = -PI / 2;
+        pitch = -M_PI / 2;
       }
     }
 
