@@ -1,10 +1,24 @@
-#include "MPU9250_Acc_Gyro.h"
+#include <cstdio>
 
-MPU9250_Acc_Gyro::MPU9250_Acc_Gyro(const char * i2cDeviceFilePath) : i2cObject(i2cDeviceFilePath) {
+#include <MPU9250_Acc_Gyro.h>
+
+MPU9250_Acc_Gyro::MPU9250_Acc_Gyro(const char * i2cDeviceFilePath) :
+  i2cObject(i2cDeviceFilePath)
+{
+//	raw.gyr_x = 0;
+//	raw.gyr_y = 0;
+//	raw.gyr_z = 0;
+//	raw.acc_x = 0;
+//	raw.acc_y = 0;
+//	raw.acc_z = 0;
   i2cObject.addressSet(MPU9250_ADDRESS);
 }
 
-void MPU9250_Acc_Gyro::begin(void) {
+void MPU9250_Acc_Gyro::begin(void)
+{
+  // Specify sensor full scale
+  const uint8_t Gscale = GFS_2000DPS;
+  const uint8_t Ascale = AFS_2G;
 
   i2cObject.writeByte(PWR_MGMT_1, 0x00); // Clear sleep mode bit (6), enable all sensors
   i2cObject.writeByte(PWR_MGMT_1, 0x01); // Auto select clock source to be PLL gyroscope reference if ready else
@@ -15,7 +29,7 @@ void MPU9250_Acc_Gyro::begin(void) {
   // be higher than 1 / 0.0059 = 170 Hz
   // DLPF_CFG = bits 2:0 = 011; this limits the sample rate to 1000 Hz for both
   // With the MPU9250, it is possible to get gyro sample rates of 32 kHz (!), 8 kHz, or 1 kHz
-   writeByte(MPU9250_ADDRESS, CONFIG, 0x03);
+  i2cObject.writeByte(CONFIG, 0x03);
 
   // Set sample rate = gyroscope output rate/(1 + SMPLRT_DIV)
   i2cObject.writeByte(SMPLRT_DIV, 0x04);  // Use a 200 Hz rate; a rate consistent with the filter update rate
@@ -45,24 +59,36 @@ void MPU9250_Acc_Gyro::begin(void) {
   // Set interrupt pin active high, push-pull, hold interrupt pin level HIGH until interrupt cleared,
   // clear on read of INT_STATUS, and enable I2C_BYPASS_EN so additional chips
   // can join the I2C bus and all can be controlled by the Arduino as master
-  writeByte(MPU9250_ADDRESS, INT_PIN_CFG, 0x22);
-  writeByte(MPU9250_ADDRESS, INT_ENABLE, 0x01);  // Enable data ready (bit 0) interrupt
+  i2cObject.writeByte(INT_PIN_CFG, 0x22);
+  i2cObject.writeByte(INT_ENABLE, 0x01);  // Enable data ready (bit 0) interrupt
 }
 
-void MPU9250_Acc_Gyro::read(void) {
+void MPU9250_Acc_Gyro::read(void)
+{
   uint8_t block_Acc[6];  // x/y/z accelerometer registers data to be stored here
   uint8_t block_Gyr[6];  // x/y/z gyroscope registers data to be stored here
 
-  if(readByte(INT_STATUS) & 0x01) { // wait for magnetometer data ready bit to be set
-  readBlock(ACCEL_XOUT_H, sizeof(block_Acc), block_Acc);  // Read the six raw data and ST2 registers sequentially into data array
-  raw.acc_x = ((int16_t)block_Acc[1] << 8) | block_Acc[0] ;  // Turn the MSB and LSB into a signed 16-bit value
-  raw.acc_y = ((int16_t)block_Acc[3] << 8) | block_Acc[2] ;  // Data stored as little Endian
-  raw.acc_z = ((int16_t)block_Acc[5] << 8) | block_Acc[4] ;
+  // wait for magnetometer data ready bit to be set
+  if (i2cObject.readByte(INT_STATUS) & 0x01) {
+    // Read the six raw data and ST2 registers sequentially into data array
+    i2cObject.readBlock(ACCEL_XOUT_H, sizeof(block_Acc), block_Acc);
+    // Turn the MSB and LSB into a signed 16-bit value
+    // Data stored as big Endian
+    raw.acc_x = ((int16_t)block_Acc[0] << 8) | block_Acc[1];
+    raw.acc_y = ((int16_t)block_Acc[2] << 8) | block_Acc[3];
+    raw.acc_z = ((int16_t)block_Acc[4] << 8) | block_Acc[5];
 
-  readBlock(GYRO_XOUT_H, sizeof(block_Gyr), block_Gyr);  // Read the six raw data and ST2 registers sequentially into data array
-  raw.gyr_x = ((int16_t)block_Gyr[1] << 8) | block_Gyr[0] ;  // Turn the MSB and LSB into a signed 16-bit value
-  raw.gyr_y = ((int16_t)block_Gyr[3] << 8) | block_Gyr[2] ;  // Data stored as little Endian
-  raw.gyr_z = ((int16_t)block_Gyr[5] << 8) | block_Gyr[4] ;
+    // Read the six raw data and ST2 registers sequentially into data array
+    // Turn the MSB and LSB into a signed 16-bit value
+    // Data stored as big Endian
+    i2cObject.readBlock(GYRO_XOUT_H, sizeof(block_Gyr), block_Gyr);
+    raw.gyr_x = ((int16_t)block_Gyr[0] << 8) | block_Gyr[1];
+    raw.gyr_y = ((int16_t)block_Gyr[2] << 8) | block_Gyr[3];
+    raw.gyr_z = ((int16_t)block_Gyr[4] << 8) | block_Gyr[5];
+
+//    printf("Acc %hd %hd %hd Gyr %hd %hd %hd\n", raw.acc_x, raw.acc_y, raw.acc_z,
+//	   raw.gyr_x, raw.gyr_y, raw.gyr_z);
+  } else {
+      printf("IMU no data\n");
   }
-
 }

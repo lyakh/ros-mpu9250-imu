@@ -2,7 +2,6 @@
 #define _I2CBus_h
 
 #include <stdint.h>
-#include "exceptions.h"
 
 class I2CBus
 {

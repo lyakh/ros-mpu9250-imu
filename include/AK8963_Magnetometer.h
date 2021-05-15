@@ -27,21 +27,16 @@
 #define AK8963_ZOUT_L              0x07
 #define AK8963_ZOUT_H              0x08
 
-enum Mscale {
+enum mscale {
   MFS_14BITS = 0, // 0.6 mG per LSB
   MFS_16BITS      // 0.15 mG per LSB
 };
 
-// Specify sensor full scale
-uint8_t Mscale = MFS_16BITS;          // 16-bit magnetometer resolution
-uint8_t Mmode = 0x02;                 // 2 for 8 Hz, 6 for 100 Hz continuous
-                                      // magnetometer data read
-
 typedef struct AK8963_MagData_s {
-  lsm303DLHCMagData_s() : x(0), y(0), z(0) {}
-  int16_t x;
-  int16_t y;
-  int16_t z;
+  AK8963_MagData_s() : x(0), y(0), z(0) {}
+  float x;
+  float y;
+  float z;
 } AK8963_MagData;
 
 class AK8963_Magnetometer {
@@ -54,6 +49,7 @@ class AK8963_Magnetometer {
     void read(void);
   private:
     I2CBus i2cObject;
+    uint8_t adjust[3];
 };
 
 #endif

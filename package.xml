@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <package>
-  <name>mpu9250_9dof_imu</name>
+  <name>mpu9250_imu</name>
   <version>0.0.1</version>
   <description>The mpu9250 9dof imu package for ROS</description>
+  <license>public domain</license>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <maintainer email="jusgomen@gmail.com">Juan Gonzalez</maintainer>
